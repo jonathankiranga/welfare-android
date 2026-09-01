@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Auto Backup to Google Drive: contacts DB + settings -->
+    <include domain="database" />
+    <include domain="sharedpref" path="smarternow_prefs.xml" />
+    <include domain="file" />
+    <exclude domain="database" path="smarternow_db-journal" />
+</full-backup-content>
