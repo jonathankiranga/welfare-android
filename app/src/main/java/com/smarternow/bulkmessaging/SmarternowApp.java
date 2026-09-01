@@ -24,6 +24,10 @@ public class SmarternowApp extends Application {
                 AppDatabase.getInstance(this).groupDao().getGroupCount();
             } catch (Exception ignored) {}
         }).start();
+        // Schedule once-per-day PWA sync (welfare.smarternowapps.co.ke)
+        try {
+            com.smarternow.bulkmessaging.worker.DailySyncWorker.schedule(this);
+        } catch (Exception ignored) {}
     }
 
     @Override

@@ -17,6 +17,7 @@ import com.smarternow.bulkmessaging.adapter.GroupAdapter;
 import com.smarternow.bulkmessaging.model.GroupWithCount;
 import com.smarternow.bulkmessaging.repository.GroupRepository;
 import com.smarternow.bulkmessaging.repository.SmsRepository;
+import com.smarternow.bulkmessaging.service.PwaSyncService;
 import com.smarternow.bulkmessaging.util.PrefsManager;
 
 import java.util.List;
@@ -34,8 +35,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvTotalSent;
     private TextView tvApiStatus;
     private TextView tvEmptyState;
+    private TextView tvLastSync;
     private RecyclerView rvGroups;
     private View loadingView;
+    private com.google.android.material.button.MaterialButton btnSyncNow;
 
     private GroupAdapter groupAdapter;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -44,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private GroupRepository groupRepo;
     private SmsRepository smsRepo;
     private PrefsManager prefs;
+    private PwaSyncService pwaSync;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,11 +59,13 @@ public class MainActivity extends AppCompatActivity {
         groupRepo = new GroupRepository(this);
         smsRepo = new SmsRepository(this);
         prefs = new PrefsManager(this);
+        pwaSync = new PwaSyncService(this);
 
         bindViews();
         setupRecycler();
         setupButtons();
         refreshDashboard();
+        refreshLastSyncLabel();
     }
 
     private void bindViews() {
@@ -69,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         tvTotalSent = findViewById(R.id.tvTotalSent);
         tvApiStatus = findViewById(R.id.tvApiStatus);
         tvEmptyState = findViewById(R.id.tvEmptyState);
+        tvLastSync = findViewById(R.id.tvLastSync);
+        btnSyncNow = findViewById(R.id.btnSyncNow);
         rvGroups = findViewById(R.id.rvGroups);
         loadingView = findViewById(R.id.loadingView);
     }
@@ -86,14 +94,50 @@ public class MainActivity extends AppCompatActivity {
         CardView cvHistory = findViewById(R.id.cvHistory);
         CardView cvSettings = findViewById(R.id.cvSettings);
 
-        cvCompose.setOnClickListener(v -> startActivity(
-                new Intent(this, ComposeMessageActivity.class)));
-        cvManageGroups.setOnClickListener(v -> startActivity(
-                new Intent(this, GroupActivity.class)));
-        cvHistory.setOnClickListener(v -> startActivity(
-                new Intent(this, MessageHistoryActivity.class)));
-        cvSettings.setOnClickListener(v -> startActivity(
-                new Intent(this, SettingsActivity.class)));
+        cvCompose.setOnClickListener(v -> startActivity(new Intent(this, ComposeMessageActivity.class)));
+        cvManageGroups.setOnClickListener(v -> startActivity(new Intent(this, GroupActivity.class)));
+        cvHistory.setOnClickListener(v -> startActivity(new Intent(this, MessageHistoryActivity.class)));
+        cvSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
+        if (btnSyncNow != null) {
+            btnSyncNow.setOnClickListener(v -> doSyncNow());
+        }
+    }
+
+    private void doSyncNow() {
+        if (prefs.getPwaApiKey().isEmpty()) {
+            android.widget.Toast.makeText(this, getString(R.string.enter_username_api), android.widget.Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, SettingsActivity.class));
+            return;
+        }
+        btnSyncNow.setEnabled(false);
+        btnSyncNow.setText(getString(R.string.drive_backing));
+        pwaSync.pull(new PwaSyncService.SyncCallback() {
+            @Override public void onSuccess(String msg) {
+                btnSyncNow.setEnabled(true);
+                btnSyncNow.setText(getString(R.string.sync_now));
+                refreshLastSyncLabel();
+                refreshDashboard();
+                android.widget.Toast.makeText(MainActivity.this, msg, android.widget.Toast.LENGTH_LONG).show();
+            }
+            @Override public void onFailure(String err) {
+                btnSyncNow.setEnabled(true);
+                btnSyncNow.setText(getString(R.string.sync_now));
+                new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                        .setTitle(getString(R.string.dialog_connection_failed))
+                        .setMessage(getString(R.string.sync_failed, err))
+                        .setPositiveButton(getString(R.string.dialog_positive_ok), null).show();
+            }
+        });
+    }
+
+    private void refreshLastSyncLabel() {
+        if (tvLastSync == null) return;
+        long ts = prefs.getLastPwaSync();
+        if (ts == 0) tvLastSync.setText(getString(R.string.last_sync_never));
+        else {
+            java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("dd MMM yyyy HH:mm", java.util.Locale.getDefault());
+            tvLastSync.setText(getString(R.string.last_sync_prefix, fmt.format(new java.util.Date(ts))));
+        }
     }
 
     private void refreshDashboard() {
@@ -140,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (groupRepo != null) {
             refreshDashboard();
+            refreshLastSyncLabel();
         }
     }
 

@@ -85,6 +85,9 @@ dependencies {
     // Splash Screen API
     implementation 'androidx.core:core-splashscreen:1.0.1'
 
+    // WorkManager for daily PWA sync (one per day)
+    implementation 'androidx.work:work-runtime:2.9.0'
+
     // Google Drive backup - minimal scope (appDataFolder)
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
     implementation('com.google.api-client:google-api-client-android:2.2.0') {
