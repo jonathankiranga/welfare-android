@@ -25,7 +25,7 @@ import com.smarternow.bulkmessaging.util.PrefsManager;
 public class SettingsActivity extends AppCompatActivity {
 
     private EditText etUsername, etApiKey, etSenderId;
-    private EditText etPwaUrl, etPwaApiKey, etOtp;
+    private EditText etPwaUrl, etOtp;
     private MaterialSwitch swSandbox, swAutoSend;
     private MaterialButton btnSave, btnTest, btnEdit;
     private MaterialButton btnDriveBackup, btnDriveRestore;
@@ -55,7 +55,6 @@ public class SettingsActivity extends AppCompatActivity {
         etApiKey = findViewById(R.id.etApiKey);
         etSenderId = findViewById(R.id.etSenderId);
         etPwaUrl = findViewById(R.id.etPwaUrl);
-        etPwaApiKey = findViewById(R.id.etPwaApiKey);
         etOtp = findViewById(R.id.etOtp);
         swSandbox = findViewById(R.id.swSandbox);
         swAutoSend = findViewById(R.id.swAutoSend);
@@ -104,7 +103,6 @@ public class SettingsActivity extends AppCompatActivity {
             String apiKey = etApiKey.getText().toString().trim();
             String senderId = etSenderId.getText().toString().trim();
             String pwaUrl = etPwaUrl.getText().toString().trim();
-            String pwaKey = etPwaApiKey.getText().toString().trim();
             if (username.isEmpty() || apiKey.isEmpty()) {
                 android.widget.Toast.makeText(this, getString(R.string.username_api_required), android.widget.Toast.LENGTH_LONG).show();
                 return;
@@ -115,7 +113,6 @@ public class SettingsActivity extends AppCompatActivity {
             prefs.setAutoSendOnStart(swAutoSend.isChecked());
             prefs.setUseSandbox(swSandbox.isChecked());
             prefs.setPwaUrl(pwaUrl.isEmpty() ? "https://welfare.smarternowapps.co.ke/api" : pwaUrl);
-            prefs.setPwaApiKey(pwaKey);
             prefs.setSetupDone(true);
             if (prefs.isConnectionValidated()) {
                 android.widget.Toast.makeText(this, getString(R.string.saved_locked), android.widget.Toast.LENGTH_LONG).show();
@@ -135,7 +132,6 @@ public class SettingsActivity extends AppCompatActivity {
         etApiKey.setText(prefs.getApiKey());
         etSenderId.setText(prefs.getSenderId());
         etPwaUrl.setText(prefs.getPwaUrl());
-        etPwaApiKey.setText(prefs.getPwaApiKey());
         swSandbox.setChecked(prefs.isUseSandbox());
         swAutoSend.setChecked(prefs.isAutoSendOnStart());
         suppressWatcher = false;
@@ -154,7 +150,6 @@ public class SettingsActivity extends AppCompatActivity {
         etApiKey.addTextChangedListener(invalidateWatcher);
         etSenderId.addTextChangedListener(invalidateWatcher);
         etPwaUrl.addTextChangedListener(invalidateWatcher);
-        etPwaApiKey.addTextChangedListener(invalidateWatcher);
         swSandbox.setOnCheckedChangeListener((btn, checked) -> {
             if (suppressWatcher || isLocked) return;
             if (prefs.isConnectionValidated()) prefs.setConnectionValidated(false);
@@ -167,7 +162,6 @@ public class SettingsActivity extends AppCompatActivity {
         etApiKey.setEnabled(!isLocked);
         etSenderId.setEnabled(!isLocked);
         etPwaUrl.setEnabled(!isLocked);
-        etPwaApiKey.setEnabled(!isLocked);
         swSandbox.setEnabled(!isLocked);
         btnSave.setEnabled(!isLocked);
         btnTest.setEnabled(!isLocked);

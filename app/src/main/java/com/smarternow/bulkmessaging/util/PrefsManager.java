@@ -23,7 +23,6 @@ public class PrefsManager {
     private static final String KEY_USE_SANDBOX = "use_sandbox";
     private static final String KEY_CONNECTION_VALIDATED = "connection_validated";
     private static final String KEY_PWA_URL = "pwa_url";
-    private static final String KEY_PWA_API_KEY = "pwa_api_key";
     private static final String KEY_DEVICE_ID = "device_id";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     private static final String KEY_LAST_PWA_SYNC = "last_pwa_sync";
@@ -103,12 +102,9 @@ public class PrefsManager {
         return isSetupDone() && isConnectionValidated();
     }
 
-    // PWA + Device binding
+    // PWA + Device binding (JWT only, no PWA_API_KEY)
     public void setPwaUrl(String url) { prefs.edit().putString(KEY_PWA_URL, url.trim()).apply(); }
     public String getPwaUrl() { return prefs.getString(KEY_PWA_URL, "https://welfare.smarternowapps.co.ke/api"); }
-
-    public void setPwaApiKey(String key) { prefs.edit().putString(KEY_PWA_API_KEY, key.trim()).apply(); }
-    public String getPwaApiKey() { return prefs.getString(KEY_PWA_API_KEY, ""); }
 
     public void setDeviceId(String id) { prefs.edit().putString(KEY_DEVICE_ID, id).apply(); }
     public String getDeviceId() { return prefs.getString(KEY_DEVICE_ID, ""); }

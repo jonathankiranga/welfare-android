@@ -59,7 +59,6 @@ public class PwaSyncService {
         String url = base() + "/api/contacts.json?since="+since;
         Request req = new Request.Builder().url(url).get()
                 .header("X-Device-Token", prefs.getDeviceToken())
-                .header("X-API-Key", prefs.getPwaApiKey())
                 .build();
         client.newCall(req).enqueue(new Callback(){
             @Override public void onFailure(Call c, IOException e){ postFail(cb, e.getMessage());}
@@ -171,7 +170,6 @@ public class PwaSyncService {
                 RequestBody body=RequestBody.create(payload.toString(), MediaType.parse("application/json"));
                 Request req=new Request.Builder().url(url).post(body)
                         .header("X-Device-Token", prefs.getDeviceToken())
-                        .header("X-API-Key", prefs.getPwaApiKey())
                         .header("Content-Type","application/json").build();
                 client.newCall(req).enqueue(new Callback(){
                     @Override public void onFailure(Call c, IOException e){ postFail(cb,e.getMessage());}

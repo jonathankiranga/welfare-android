@@ -72,11 +72,9 @@ public class DeviceBindingManager {
 
     public void register(BindingCallback cb) {
         String url = prefs.getPwaUrl().replaceAll("/api/?$", "") + "/api/device/register";
-        String apiKey = prefs.getPwaApiKey();
         String deviceId = getOrCreateDeviceId();
         RequestBody body = RequestBody.create("{\"device_id\":\""+deviceId+"\"}", MediaType.parse("application/json"));
         Request req = new Request.Builder().url(url).post(body)
-                .header("X-API-Key", apiKey)
                 .header("Content-Type", "application/json").build();
         client.newCall(req).enqueue(new Callback() {
             @Override public void onFailure(Call c, IOException e) { postFail(cb, e.getMessage()); }
@@ -97,11 +95,10 @@ public class DeviceBindingManager {
 
     public void requestOtp(OtpCallback cb){
         String url = prefs.getPwaUrl().replaceAll("/api/?$", "") + "/api/device/request-otp";
-        String apiKey = prefs.getPwaApiKey();
         String deviceId = getOrCreateDeviceId();
         RequestBody body = RequestBody.create("{\"device_id\":\""+deviceId+"\"}", MediaType.parse("application/json"));
         Request req = new Request.Builder().url(url).post(body)
-                .header("X-API-Key", apiKey).header("Content-Type","application/json").build();
+                .header("Content-Type","application/json").build();
         client.newCall(req).enqueue(new Callback() {
             @Override public void onFailure(Call c, IOException e){ postOtpFail(cb,e.getMessage());}
             @Override public void onResponse(Call c, Response r) throws IOException{
@@ -112,11 +109,10 @@ public class DeviceBindingManager {
 
     public void transfer(String otp, TransferCallback cb){
         String url = prefs.getPwaUrl().replaceAll("/api/?$", "") + "/api/device/transfer";
-        String apiKey = prefs.getPwaApiKey();
         String deviceId = getOrCreateDeviceId();
         RequestBody body = RequestBody.create("{\"device_id\":\""+deviceId+"\",\"otp\":\""+otp+"\"}", MediaType.parse("application/json"));
         Request req = new Request.Builder().url(url).post(body)
-                .header("X-API-Key", apiKey).header("Content-Type","application/json").build();
+                .header("Content-Type","application/json").build();
         client.newCall(req).enqueue(new Callback(){
             @Override public void onFailure(Call c, IOException e){ postTransferFail(cb,e.getMessage());}
             @Override public void onResponse(Call c, Response r) throws IOException{

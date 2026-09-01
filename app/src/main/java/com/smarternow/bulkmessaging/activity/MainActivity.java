@@ -104,8 +104,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doSyncNow() {
-        if (prefs.getPwaApiKey().isEmpty()) {
-            android.widget.Toast.makeText(this, getString(R.string.enter_username_api), android.widget.Toast.LENGTH_LONG).show();
+        if (prefs.getPwaUrl().isEmpty()) {
+            android.widget.Toast.makeText(this, getString(R.string.pwa_url_hint), android.widget.Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, SettingsActivity.class));
             return;
         }
