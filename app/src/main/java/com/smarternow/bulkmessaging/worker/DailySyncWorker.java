@@ -17,7 +17,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * DailySyncWorker — once per day pull from welfare.smarternowapps.co.ke
+ * DailySyncWorker — once per day pull from welfare-pwa.onrender.com
  * Requirements: NETWORK_CONNECTED, battery not low. Minimal RAM.
  */
 public class DailySyncWorker extends Worker {

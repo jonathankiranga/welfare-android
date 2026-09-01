@@ -104,7 +104,7 @@ public class PrefsManager {
 
     // PWA + Device binding (JWT only, no PWA_API_KEY)
     public void setPwaUrl(String url) { prefs.edit().putString(KEY_PWA_URL, url.trim()).apply(); }
-    public String getPwaUrl() { return prefs.getString(KEY_PWA_URL, "https://welfare.smarternowapps.co.ke/api"); }
+    public String getPwaUrl() { return prefs.getString(KEY_PWA_URL, "https://welfare-pwa.onrender.com/api"); }
 
     public void setDeviceId(String id) { prefs.edit().putString(KEY_DEVICE_ID, id).apply(); }
     public String getDeviceId() { return prefs.getString(KEY_DEVICE_ID, ""); }

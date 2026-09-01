@@ -20,7 +20,7 @@ import com.smarternow.bulkmessaging.util.PrefsManager;
 
 /**
  * Gateway + PWA + Device lock configuration.
- * PWA at welfare.smarternowapps.co.ke is source of truth, Android is single APK lock via device binding (OTP self-service), archive-only, TiDB MySQL.
+ * PWA at welfare-pwa.onrender.com is source of truth, Android is single APK lock via device binding (OTP self-service), archive-only, TiDB MySQL.
  */
 public class SettingsActivity extends AppCompatActivity {
 
@@ -112,7 +112,7 @@ public class SettingsActivity extends AppCompatActivity {
             prefs.saveSenderId(senderId);
             prefs.setAutoSendOnStart(swAutoSend.isChecked());
             prefs.setUseSandbox(swSandbox.isChecked());
-            prefs.setPwaUrl(pwaUrl.isEmpty() ? "https://welfare.smarternowapps.co.ke/api" : pwaUrl);
+            prefs.setPwaUrl(pwaUrl.isEmpty() ? "https://welfare-pwa.onrender.com/api" : pwaUrl);
             prefs.setSetupDone(true);
             if (prefs.isConnectionValidated()) {
                 android.widget.Toast.makeText(this, getString(R.string.saved_locked), android.widget.Toast.LENGTH_LONG).show();

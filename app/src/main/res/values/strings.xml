@@ -151,10 +151,10 @@ Separate rows with Enter.</string>
     <string name="action_rename">Rename</string>
     <string name="action_delete">Delete</string>
     <string name="action_add_edit_contacts">Add / edit contacts</string>
-    <string name="pwa_sync_title">PWA Sync — welfare.smarternowapps.co.ke</string>
+    <string name="pwa_sync_title">PWA Sync — welfare-pwa.onrender.com</string>
     <string name="pwa_sync_desc">PWA is source of truth. Pull daily or on demand. Phone keeps local copy for sending.</string>
     <string name="pwa_url_label">PWA API URL</string>
-    <string name="pwa_url_hint">https://welfare.smarternowapps.co.ke/api</string>
+    <string name="pwa_url_hint">https://welfare-pwa.onrender.com/api</string>
     <string name="pwa_api_key_label">PWA API Key</string>
     <string name="pwa_api_key_hint">shared-key</string>
     <string name="sync_now">Sync now</string>
