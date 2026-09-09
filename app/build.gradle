@@ -89,6 +89,24 @@ android {
     }
 }
 
+// After assembleRelease completes, copy the APK to the workspace root with the release filename.
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease') {
+        task.doLast {
+            def apk = file("${buildDir}/outputs/apk/release/app-release.apk")
+            def dest = file("${rootProject.projectDir}/../Smarternow-Bulk-Messaging-v1.0-release.apk")
+            if (apk.exists()) {
+                copy {
+                    from apk
+                    into dest.parentFile
+                    rename { dest.name }
+                }
+                println "APK copied to: ${dest.absolutePath}"
+            }
+        }
+    }
+}
+
 dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
