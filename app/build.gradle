@@ -75,7 +75,7 @@ android {
 
     packaging {
         resources {
-            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt']
+            excludes += ['META-INF/DEPENDENCIES']
         }
     }
 
@@ -135,15 +135,6 @@ dependencies {
 
     // WorkManager for daily PWA sync (one per day)
     implementation 'androidx.work:work-runtime:2.9.0'
-
-    // Google Drive backup - minimal scope (appDataFolder)
-    implementation 'com.google.android.gms:play-services-auth:20.7.0'
-    implementation('com.google.api-client:google-api-client-android:2.2.0') {
-        exclude group: 'org.apache.httpcomponents'
-    }
-    implementation('com.google.apis:google-api-services-drive:v3-rev20231128-2.0.0') {
-        exclude group: 'org.apache.httpcomponents'
-    }
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
