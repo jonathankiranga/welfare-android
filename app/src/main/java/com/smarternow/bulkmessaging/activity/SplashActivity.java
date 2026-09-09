@@ -18,11 +18,16 @@ import androidx.core.splashscreen.SplashScreen;
 
 import com.smarternow.bulkmessaging.R;
 import com.smarternow.bulkmessaging.model.SmsMessage;
+import com.smarternow.bulkmessaging.repository.GroupRepository;
 import com.smarternow.bulkmessaging.repository.SmsRepository;
+import com.smarternow.bulkmessaging.service.AfricaTalkingService;
 import com.smarternow.bulkmessaging.util.MessageValidator;
 import com.smarternow.bulkmessaging.util.PermissionManager;
 import com.smarternow.bulkmessaging.util.PrefsManager;
 
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -114,19 +119,18 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     /**
-     * Background work: fetch pending messages, validate, count recipients.
+     * Background work: fetch pending messages, validate ALL of them, count recipients.
+     * Invalid messages are marked REJECTED here; valid messages remain PENDING and
+     * are dispatched via startAutoSendContinuation if auto-send is enabled.
      */
     private void runAutoPickValidation(long startTime) {
         executor.execute(() -> {
-            StringBuilder log = new StringBuilder();
-
             SmsRepository smsRepo = new SmsRepository(this);
             PrefsManager prefs = new PrefsManager(this);
 
             List<SmsMessage> pending = smsRepo.getPendingMessages();
 
             if (pending.isEmpty()) {
-                log.append("No queued messages. Ready for new broadcast.");
                 mainHandler.post(() -> {
                     tvAutoPickLabel.setText(getString(R.string.splash_autopick));
                     tvPickedMessage.setText(getString(R.string.splash_no_queue));
@@ -135,37 +139,45 @@ public class SplashActivity extends AppCompatActivity {
                     tvRecipientSummary.setText(getString(R.string.splash_ready));
                 });
             } else {
-                SmsMessage picked = pending.get(0);
-                MessageValidator.ValidationResult result =
-                        MessageValidator.validate(picked.getMessageText());
-
-                log.append("Picked message #").append(picked.getId());
-
-                final String outcome;
-                final int colorRes;
-                if (result.isValid()) {
-                    outcome = "VALID — message auto-picked and approved for sending.";
-                    colorRes = R.color.validation_green;
-                    smsRepo.updateMessageStatus(picked.getId(), SmsMessage.STATUS_SENT);
-                    log.append(" -> passed validation, marked SENT");
-                } else {
-                    outcome = "FLAGGED — " + result.getReason();
-                    colorRes = R.color.validation_red;
-                    smsRepo.updateMessageStatus(picked.getId(), SmsMessage.STATUS_REJECTED);
-                    log.append(" -> rejected: ").append(result.getReason());
+                // Validate every pending message; reject invalid ones immediately.
+                int validCount = 0;
+                int rejectedCount = 0;
+                SmsMessage firstValid = null;
+                for (SmsMessage msg : pending) {
+                    MessageValidator.ValidationResult result =
+                            MessageValidator.validate(msg.getMessageText());
+                    if (result.isValid()) {
+                        validCount++;
+                        if (firstValid == null) firstValid = msg;
+                    } else {
+                        smsRepo.updateMessageStatus(msg.getId(), SmsMessage.STATUS_REJECTED);
+                        rejectedCount++;
+                    }
                 }
 
-                final String messageText = picked.getMessageText();
-                final String summary = "Target: " + picked.getTargetGroupName()
-                        + " | Recipients: " + picked.getRecipientCount()
-                        + " | Pending queue: " + Math.max(0, smsRepo.getPendingCount());
+                final SmsMessage displayMsg = firstValid;
+                final int finalValid = validCount;
+                final int finalRejected = rejectedCount;
+                final int remainingPending = smsRepo.getPendingCount();
 
                 mainHandler.post(() -> {
                     tvAutoPickLabel.setText(getString(R.string.splash_picked));
-                    tvPickedMessage.setText(messageText);
-                    tvValidationStatus.setText(outcome);
-                    tvValidationStatus.setTextColor(getColor(colorRes));
-                    tvRecipientSummary.setText(summary);
+                    if (displayMsg != null) {
+                        tvPickedMessage.setText(displayMsg.getMessageText());
+                        tvValidationStatus.setText(
+                                "VALID — " + finalValid + " message(s) ready to send."
+                                + (finalRejected > 0 ? " " + finalRejected + " rejected." : ""));
+                        tvValidationStatus.setTextColor(getColor(R.color.validation_green));
+                        tvRecipientSummary.setText(
+                                "Target: " + displayMsg.getTargetGroupName()
+                                + " | Recipients: " + displayMsg.getRecipientCount()
+                                + " | Pending queue: " + remainingPending);
+                    } else {
+                        tvPickedMessage.setText(getString(R.string.splash_no_queue));
+                        tvValidationStatus.setText("FLAGGED — all " + finalRejected + " message(s) rejected.");
+                        tvValidationStatus.setTextColor(getColor(R.color.validation_red));
+                        tvRecipientSummary.setText(getString(R.string.splash_ready));
+                    }
                 });
             }
 
@@ -198,15 +210,62 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void startAutoSendContinuation() {
-        // Non-blocking: kick off background dispatch of remaining ready messages.
+        // Non-blocking: dispatch all PENDING messages through Africa's Talking.
         executor.execute(() -> {
             SmsRepository repo = new SmsRepository(this);
-            List<SmsMessage> ready = repo.getMessagesByStatus(SmsMessage.STATUS_SENT);
-            for (SmsMessage message : ready) {
-                // Actual dispatch is performed by the compose flow as a safety
-                // measure; here we only log the intent so users keep control.
+            PrefsManager prefs = new PrefsManager(this);
+
+            String apiKey = prefs.getApiKey();
+            String username = prefs.getUsername();
+            String senderId = prefs.getSenderId();
+
+            if (apiKey.isEmpty()) {
+                // No credentials — cannot auto-send; messages stay PENDING.
+                return;
             }
-            mainHandler.post(() -> { });
+
+            AfricaTalkingService service = new AfricaTalkingService();
+            service.useSandbox(prefs.isUseSandbox());
+
+            GroupRepository groupRepo = new GroupRepository(this);
+            List<SmsMessage> pending = repo.getPendingMessages();
+
+            for (SmsMessage message : pending) {
+                // Resolve actual phone numbers for this message's target.
+                List<com.smarternow.bulkmessaging.model.Contact> contacts;
+                if (SmsMessage.TARGET_ALL.equals(message.getTargetType())) {
+                    contacts = groupRepo.getAllContacts();
+                } else {
+                    contacts = groupRepo.getContactsByGroup(message.getTargetGroupId());
+                }
+
+                if (contacts.isEmpty()) {
+                    repo.updateMessageStatusAndResponse(message.getId(),
+                            SmsMessage.STATUS_FAILED, "No contacts found for target.");
+                    continue;
+                }
+
+                List<String> numbers = new ArrayList<>();
+                for (com.smarternow.bulkmessaging.model.Contact c : contacts) {
+                    numbers.add(c.getPhoneNumber());
+                }
+
+                final long msgId = message.getId();
+                service.sendBulkSms(apiKey, username, senderId, numbers,
+                        message.getMessageText(), new AfricaTalkingService.SmsCallback() {
+                            @Override
+                            public void onSuccess(JSONObject response) {
+                                repo.updateMessageStatusAndResponse(
+                                        msgId, SmsMessage.STATUS_ACCEPTED, response.toString());
+                            }
+
+                            @Override
+                            public void onFailure(String errorMessage) {
+                                repo.updateMessageStatusAndResponse(
+                                        msgId, SmsMessage.STATUS_FAILED, errorMessage);
+                            }
+                        });
+            }
         });
     }
 

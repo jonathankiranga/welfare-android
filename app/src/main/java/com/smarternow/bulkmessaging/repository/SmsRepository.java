@@ -57,25 +57,11 @@ public class SmsRepository {
     }
 
     public void updateMessageStatus(long messageId, String status) {
-        SmsMessage message = db.smsMessageDao().getAllMessages().stream()
-                .filter(m -> m.getId() == messageId)
-                .findFirst().orElse(null);
-        if (message != null) {
-            message.setStatus(status);
-            db.smsMessageDao().update(message);
-        }
+        db.smsMessageDao().updateStatus(messageId, status);
     }
 
     public void updateMessageStatusAndResponse(long messageId, String status, String response) {
-        List<SmsMessage> all = db.smsMessageDao().getAllMessages();
-        for (SmsMessage m : all) {
-            if (m.getId() == messageId) {
-                m.setStatus(status);
-                m.setResponse(response);
-                db.smsMessageDao().update(m);
-                break;
-            }
-        }
+        db.smsMessageDao().updateStatusAndResponse(messageId, status, response);
     }
 
     public void clearHistory() {

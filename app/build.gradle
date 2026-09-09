@@ -30,11 +30,41 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            // TODO: Replace with your production keystore before publishing to Google Play.
+            // Set these four values via environment variables or a local keystore.properties
+            // file (add keystore.properties to .gitignore — never commit secrets).
+            //
+            // Example keystore.properties:
+            //   storeFile=../release.keystore
+            //   storePassword=yourStorePassword
+            //   keyAlias=yourKeyAlias
+            //   keyPassword=yourKeyPassword
+            //
+            // Then load it here:
+            //   def keystoreProps = new Properties()
+            //   keystoreProps.load(new FileInputStream(rootProject.file("keystore.properties")))
+            //   storeFile     file(keystoreProps["storeFile"])
+            //   storePassword keystoreProps["storePassword"]
+            //   keyAlias      keystoreProps["keyAlias"]
+            //   keyPassword   keystoreProps["keyPassword"]
+            //
+            // Until a real keystore is configured, the release build falls back to the
+            // debug signing config so the project still compiles locally.
+            storeFile     file(System.getenv("RELEASE_STORE_FILE")     ?: (System.getProperty("user.home") + "/.android/debug.keystore"))
+            storePassword (System.getenv("RELEASE_STORE_PASSWORD")     ?: "android")
+            keyAlias      (System.getenv("RELEASE_KEY_ALIAS")          ?: "androiddebugkey")
+            keyPassword   (System.getenv("RELEASE_KEY_PASSWORD")       ?: "android")
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
         debug {
             // Keep debug light for low-RAM devices

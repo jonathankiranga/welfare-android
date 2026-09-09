@@ -305,9 +305,8 @@ public class ComposeMessageActivity extends AppCompatActivity {
         try {
             JSONObject data = response.optJSONObject("SMSMessageData");
             if (data == null) return 0;
-            JSONObject recipients = data.optJSONObject("Recipients");
-            if (recipients == null) return 0;
-            JSONArray arr = recipients.optJSONArray("Recipients");
+            // "Recipients" under SMSMessageData is a JSONArray, not a JSONObject.
+            JSONArray arr = data.optJSONArray("Recipients");
             if (arr == null) return 0;
             return arr.length();
         } catch (Exception e) {

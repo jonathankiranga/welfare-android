@@ -38,4 +38,12 @@ public interface SmsMessageDao {
 
     @Query("DELETE FROM sms_messages WHERE id = :messageId")
     void deleteById(long messageId);
+
+    /** Direct status update — avoids a full table scan in SmsRepository. */
+    @Query("UPDATE sms_messages SET status = :status WHERE id = :messageId")
+    void updateStatus(long messageId, String status);
+
+    /** Direct status + response update — avoids a full table scan in SmsRepository. */
+    @Query("UPDATE sms_messages SET status = :status, response = :response WHERE id = :messageId")
+    void updateStatusAndResponse(long messageId, String status, String response);
 }
