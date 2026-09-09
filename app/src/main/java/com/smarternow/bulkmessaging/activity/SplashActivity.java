@@ -247,7 +247,7 @@ public class SplashActivity extends AppCompatActivity {
 
                 List<String> numbers = new ArrayList<>();
                 for (com.smarternow.bulkmessaging.model.Contact c : contacts) {
-                    numbers.add(c.getPhoneNumber());
+                    numbers.add(com.smarternow.bulkmessaging.util.MessageUtil.normalizePhone(c.getPhoneNumber()));
                 }
 
                 final long msgId = message.getId();

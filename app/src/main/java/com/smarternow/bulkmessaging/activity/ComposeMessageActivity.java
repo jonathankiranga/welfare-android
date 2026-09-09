@@ -22,6 +22,7 @@ import com.smarternow.bulkmessaging.repository.GroupRepository;
 import com.smarternow.bulkmessaging.repository.SmsRepository;
 import com.smarternow.bulkmessaging.service.AfricaTalkingService;
 import com.smarternow.bulkmessaging.util.MessageValidator;
+import com.smarternow.bulkmessaging.util.MessageUtil;
 import com.smarternow.bulkmessaging.util.PrefsManager;
 
 import org.json.JSONArray;
@@ -250,7 +251,7 @@ public class ComposeMessageActivity extends AppCompatActivity {
                     targetGroupId, targetGroupName, count, SmsMessage.STATUS_PENDING);
 
             List<String> numbers = new ArrayList<>();
-            for (Contact c : recipients) numbers.add(c.getPhoneNumber());
+            for (Contact c : recipients) numbers.add(MessageUtil.normalizePhone(c.getPhoneNumber()));
 
             String apiKey = prefs.getApiKey();
             String username = prefs.getUsername();
